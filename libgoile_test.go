@@ -7,10 +7,10 @@ import (
 	"github.com/routiz/libgoile"
 )
 
-func TestLibgoile(t *testing.T) {
+func TestScmWithGuile(t *testing.T) {
 	greeterorig := "greeterorig"
-	libgoile.ScmWithGuile(libgoile.GoScmWithGuileFuncInfo{
-		F: func(greeterany any) unsafe.Pointer {
+	libgoile.ScmWithGuile(
+		func(greeterany any) unsafe.Pointer {
 			greeter, ok := greeterany.(string)
 			if !ok {
 				t.Logf("Failed to get args: %T\n", greeter)
@@ -23,8 +23,16 @@ func TestLibgoile(t *testing.T) {
 			}
 			return nil
 		},
-		Args: greeterorig,
-	})
+		greeterorig)
 
+	libgoile.ScmWithGuile(
+		func(greeterany any) unsafe.Pointer {
+			libgoile.ScmEvalString("(+ 2 10)")
+			return nil
+		},
+		nil)
+}
+
+func TestScmInitGuile(t *testing.T) {
 	libgoile.ScmInitGuile()
 }

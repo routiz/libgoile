@@ -81,7 +81,7 @@ func dataGet(id reqID) any {
 	return rsp.p
 }
 
-type GoScmWithGuileFuncInfo struct {
+type goScmWithGuileFuncInfo struct {
 	F    func(any) unsafe.Pointer
 	Args any
 }
@@ -89,18 +89,28 @@ type GoScmWithGuileFuncInfo struct {
 //export GoScmWithGuileFunc
 func GoScmWithGuileFunc(ctxid uint64) unsafe.Pointer {
 	rsp := dataGet(reqID(ctxid))
-	fInfo, ok := rsp.(GoScmWithGuileFuncInfo)
+	fInfo, ok := rsp.(goScmWithGuileFuncInfo)
 	if !ok {
 		return nil
 	}
 	return fInfo.F(fInfo.Args)
 }
 
-func ScmWithGuile(fInfo GoScmWithGuileFuncInfo) unsafe.Pointer {
-	reqID := dataStore(fInfo)
+func ScmWithGuile(f func(any) unsafe.Pointer, args any) unsafe.Pointer {
+	reqID := dataStore(goScmWithGuileFuncInfo{F: f, Args: args})
 	return C.goile_scm_with_guile(unsafe.Pointer(&reqID))
 }
 
 func ScmInitGuile() {
 	C.scm_init_guile()
+}
+
+func ScmEvalString(sexpr string) Scm {
+	csexpr := C.CString(sexpr)
+	defer C.free(unsafe.Pointer(csexpr))
+
+	scmsexpr := C.scm_from_utf8_stringn(csexpr, C.ulong(len(sexpr)))
+
+	scmp := C.scm_eval_string(scmsexpr)
+	return Scm{p: unsafe.Pointer(scmp)}
 }
