@@ -39,34 +39,37 @@ var (
 func init() {
 	reqchann = make(chan req)
 	respchann = make(chan resp)
+}
+
+func runDataStoreWorker() {
 	respid := reqID(1)
 	storage := make(map[reqID]any)
-	go func() {
-		for {
-			for {
-				req := <-reqchann
-				switch req.t {
-				case reqTypeDataStore:
-					storage[respid] = req.p
-					respchann <- resp{id: respid}
-					respid++
-				case reqTypeDataGet:
-					id, ok := req.p.(reqID)
-					if !ok {
-						respchann <- resp{}
-						continue
-					}
-					d, ok := storage[id]
-					if !ok {
-						respchann <- resp{}
-						continue
-					}
-					respchann <- resp{id: id, p: d}
-				}
-
+	for {
+		req := <-reqchann
+		switch req.t {
+		case reqTypeDataStore:
+			storage[respid] = req.p
+			respchann <- resp{id: respid}
+			respid++
+		case reqTypeDataGet:
+			id, ok := req.p.(reqID)
+			if !ok {
+				respchann <- resp{}
+				continue
 			}
+			d, ok := storage[id]
+			if !ok {
+				respchann <- resp{}
+				continue
+			}
+			respchann <- resp{id: id, p: d}
 		}
-	}()
+
+	}
+}
+
+func init() {
+	go runDataStoreWorker()
 }
 
 func dataStore(d any) reqID {
@@ -86,8 +89,8 @@ type goScmWithGuileFuncInfo struct {
 	Args any
 }
 
-//export GoScmWithGuileFunc
-func GoScmWithGuileFunc(ctxid uint64) unsafe.Pointer {
+//export goScmWithGuileFunc
+func goScmWithGuileFunc(ctxid uint64) unsafe.Pointer {
 	rsp := dataGet(reqID(ctxid))
 	fInfo, ok := rsp.(goScmWithGuileFuncInfo)
 	if !ok {
