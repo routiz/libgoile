@@ -20,6 +20,7 @@ type reqID uint64
 const (
 	reqTypeDataStore = reqType(iota)
 	reqTypeDataGet
+	reqTypeDataClear
 )
 
 type req struct {
@@ -64,6 +65,12 @@ func runDataStoreWorker() {
 				continue
 			}
 			respchann <- resp{id: id, p: d}
+		case reqTypeDataClear:
+			id, ok := req.p.(reqID)
+			if !ok {
+				continue
+			}
+			delete(storage, id)
 		}
 
 	}
@@ -85,6 +92,10 @@ func dataGet(id reqID) any {
 	return rsp.p
 }
 
+func dataClear(id reqID) {
+	reqchann <- req{t: reqTypeDataClear, p: id}
+}
+
 type goScmWithGuileFuncInfo struct {
 	F    func(any) unsafe.Pointer
 	Args any
@@ -102,23 +113,24 @@ func goScmWithGuileFunc(ctxid uint64) unsafe.Pointer {
 
 func ScmWithGuile(f func(any) unsafe.Pointer, args any) unsafe.Pointer {
 	reqID := dataStore(goScmWithGuileFuncInfo{F: f, Args: args})
-	return C.goile_scm_with_guile(unsafe.Pointer(&reqID))
+	r := C.goile_scm_with_guile(unsafe.Pointer(&reqID))
+	dataClear(reqID)
+	return r
 }
 
 func ScmInitGuile() {
 	C.scm_init_guile()
 }
 
-func ScmEvalString(sexpr string) Scm {
+func ScmEvalString(sexpr string) C.SCM {
 	csexpr := C.CString(sexpr)
 	defer C.free(unsafe.Pointer(csexpr))
 
 	scmsexpr := C.scm_from_utf8_stringn(csexpr, C.ulong(len(sexpr)))
-
-	return Scm{p: C.scm_eval_string(scmsexpr)}
+	return C.scm_eval_string(scmsexpr)
 }
 
-func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) Scm {
+func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) C.SCM {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -128,8 +140,7 @@ func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) Scm {
 
 	ffnc := C.scm_t_subr(f)
 
-	cscm := C.scm_c_define_gsubr(cname, creq, copt, crst, ffnc)
-	return Scm{p: cscm}
+	return C.scm_c_define_gsubr(cname, creq, copt, crst, ffnc)
 }
 
 //export genGreeterSCM
