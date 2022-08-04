@@ -7,6 +7,7 @@ package libgoile
 //
 // void* do_goile_scm_with_guile (void*);
 // void* goile_scm_with_guile (void*);
+// SCM genGreeterSCM(SCM);
 import "C"
 import (
 	"unsafe"
@@ -114,6 +115,36 @@ func ScmEvalString(sexpr string) Scm {
 
 	scmsexpr := C.scm_from_utf8_stringn(csexpr, C.ulong(len(sexpr)))
 
-	scmp := C.scm_eval_string(scmsexpr)
-	return Scm{p: unsafe.Pointer(scmp)}
+	return Scm{p: C.scm_eval_string(scmsexpr)}
+}
+
+func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) Scm {
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+
+	creq := C.int(req)
+	copt := C.int(opt)
+	crst := C.int(rst)
+
+	ffnc := C.scm_t_subr(f)
+
+	cscm := C.scm_c_define_gsubr(cname, creq, copt, crst, ffnc)
+	return Scm{p: cscm}
+}
+
+//export genGreeterSCM
+func genGreeterSCM(greeter C.SCM) C.SCM {
+	cgreeter := C.scm_to_utf8_stringn(greeter, nil)
+	defer C.free(unsafe.Pointer(cgreeter))
+
+	gogreeter := C.GoString(cgreeter)
+	gogreet := "hello, " + gogreeter
+	cgreet := C.CString(gogreet)
+	defer C.free(unsafe.Pointer(cgreet))
+
+	return C.scm_from_utf8_string(cgreet)
+}
+
+func ScmCDefineGsubrSample() {
+	ScmCDefineGsubr("libgoile-sample", 1, 0, 0, C.genGreeterSCM)
 }

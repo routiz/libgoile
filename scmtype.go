@@ -1,7 +1,8 @@
 package libgoile
 
-import "unsafe"
+// #include<libguile.h>
+import "C"
 
 type Scm struct {
-	p unsafe.Pointer
+	p C.SCM
 }

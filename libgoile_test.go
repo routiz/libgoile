@@ -28,6 +28,8 @@ func TestScmWithGuile(t *testing.T) {
 	libgoile.ScmWithGuile(
 		func(greeterany any) unsafe.Pointer {
 			libgoile.ScmEvalString("(+ 2 10)")
+			// TODO When type Scm struct{} is done, check
+			// the result.
 			return nil
 		},
 		nil)
@@ -35,4 +37,14 @@ func TestScmWithGuile(t *testing.T) {
 
 func TestScmInitGuile(t *testing.T) {
 	libgoile.ScmInitGuile()
+}
+
+func TestDefineSubr(t *testing.T) {
+	libgoile.ScmWithGuile(
+		func(any) unsafe.Pointer {
+			libgoile.ScmCDefineGsubrSample()
+			libgoile.ScmEvalString("(libgoile-sample \"libgoile\")")
+			return nil
+		}, nil,
+	)
 }
