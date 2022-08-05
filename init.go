@@ -127,15 +127,15 @@ func ScmInitGuile() {
 	C.scm_init_guile()
 }
 
-func ScmEvalString(sexpr string) C.SCM {
+func ScmEvalString(sexpr string) unsafe.Pointer {
 	csexpr := C.CString(sexpr)
 	defer C.free(unsafe.Pointer(csexpr))
 
 	scmsexpr := C.scm_from_utf8_stringn(csexpr, C.ulong(len(sexpr)))
-	return C.SCM(C.scm_eval_string(scmsexpr))
+	return unsafe.Pointer(C.scm_eval_string(scmsexpr))
 }
 
-func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) C.SCM {
+func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) unsafe.Pointer {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -145,7 +145,7 @@ func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) C.SCM {
 
 	ffnc := C.scm_t_subr(f)
 
-	return C.SCM(
+	return unsafe.Pointer(
 		C.scm_c_define_gsubr(cname, creq, copt, crst, ffnc),
 	)
 }
