@@ -111,6 +111,9 @@ func goScmWithGuileFunc(ctxid uint64) unsafe.Pointer {
 	return fInfo.F(fInfo.Args)
 }
 
+// ScmWithGuile is Go version of scm_with_guile. It runs a function in
+// guile mode and hand the return value over. You will call libgoile
+// functions via ScmWithGuile unless using ScmInitGuile.
 func ScmWithGuile(f func(any) unsafe.Pointer, args any) unsafe.Pointer {
 	reqID := dataStore(goScmWithGuileFuncInfo{F: f, Args: args})
 	r := C.goile_scm_with_guile(unsafe.Pointer(&reqID))
@@ -118,19 +121,21 @@ func ScmWithGuile(f func(any) unsafe.Pointer, args any) unsafe.Pointer {
 	return r
 }
 
+// ScmInitGuile makes the thread in which it is called into guile
+// mode.
 func ScmInitGuile() {
 	C.scm_init_guile()
 }
 
-func ScmEvalString(sexpr string) C.SCM {
+func ScmEvalString(sexpr string) CSCM {
 	csexpr := C.CString(sexpr)
 	defer C.free(unsafe.Pointer(csexpr))
 
 	scmsexpr := C.scm_from_utf8_stringn(csexpr, C.ulong(len(sexpr)))
-	return C.scm_eval_string(scmsexpr)
+	return CSCM(C.scm_eval_string(scmsexpr))
 }
 
-func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) C.SCM {
+func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) CSCM {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -140,11 +145,13 @@ func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) C.SCM {
 
 	ffnc := C.scm_t_subr(f)
 
-	return C.scm_c_define_gsubr(cname, creq, copt, crst, ffnc)
+	return CSCM(
+		C.scm_c_define_gsubr(cname, creq, copt, crst, ffnc),
+	)
 }
 
 //export genGreeterSCM
-func genGreeterSCM(greeter C.SCM) C.SCM {
+func genGreeterSCM(greeter CSCM) CSCM {
 	cgreeter := C.scm_to_utf8_stringn(greeter, nil)
 	defer C.free(unsafe.Pointer(cgreeter))
 
@@ -153,7 +160,7 @@ func genGreeterSCM(greeter C.SCM) C.SCM {
 	cgreet := C.CString(gogreet)
 	defer C.free(unsafe.Pointer(cgreet))
 
-	return C.scm_from_utf8_string(cgreet)
+	return CSCM(C.scm_from_utf8_string(cgreet))
 }
 
 func ScmCDefineGsubrSample() {
