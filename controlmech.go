@@ -4,8 +4,8 @@ package libgoile
 // #include<libguile.h>
 import "C"
 
-func ScmThrow(key string, scmlist CSCM) CSCM {
-	return CSCM(C.scm_throw(
+func ScmThrow(key string, scmlist C.SCM) C.SCM {
+	return C.SCM(C.scm_throw(
 		ScmFromStringSymbol(key),
 		scmlist,
 	))

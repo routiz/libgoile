@@ -127,15 +127,15 @@ func ScmInitGuile() {
 	C.scm_init_guile()
 }
 
-func ScmEvalString(sexpr string) CSCM {
+func ScmEvalString(sexpr string) C.SCM {
 	csexpr := C.CString(sexpr)
 	defer C.free(unsafe.Pointer(csexpr))
 
 	scmsexpr := C.scm_from_utf8_stringn(csexpr, C.ulong(len(sexpr)))
-	return CSCM(C.scm_eval_string(scmsexpr))
+	return C.SCM(C.scm_eval_string(scmsexpr))
 }
 
-func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) CSCM {
+func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) C.SCM {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
@@ -145,13 +145,13 @@ func ScmCDefineGsubr(name string, req, opt, rst int, f unsafe.Pointer) CSCM {
 
 	ffnc := C.scm_t_subr(f)
 
-	return CSCM(
+	return C.SCM(
 		C.scm_c_define_gsubr(cname, creq, copt, crst, ffnc),
 	)
 }
 
 //export genGreeterSCM
-func genGreeterSCM(greeter CSCM) CSCM {
+func genGreeterSCM(greeter C.SCM) C.SCM {
 	cgreeter := C.scm_to_utf8_stringn(greeter, nil)
 	defer C.free(unsafe.Pointer(cgreeter))
 
@@ -160,7 +160,7 @@ func genGreeterSCM(greeter CSCM) CSCM {
 	cgreet := C.CString(gogreet)
 	defer C.free(unsafe.Pointer(cgreet))
 
-	return CSCM(C.scm_from_utf8_string(cgreet))
+	return C.SCM(C.scm_from_utf8_string(cgreet))
 }
 
 func ScmCDefineGsubrSample() {
