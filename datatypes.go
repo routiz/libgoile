@@ -7,6 +7,46 @@ import (
 	"unsafe"
 )
 
+func ScmIsNumber(scm unsafe.Pointer) bool {
+	return C.scm_number_p(C.SCM(scm)) == C.SCM_BOOL_T
+}
+
+func ScmIsInteger(scm unsafe.Pointer) bool {
+	return C.scm_integer_p(C.SCM(scm)) == C.SCM_BOOL_T
+}
+
+func ScmIsExactInteger(scm unsafe.Pointer) bool {
+	return C.scm_exact_integer_p(C.SCM(scm)) == C.SCM_BOOL_T
+}
+
+func ScmToInt64(scm unsafe.Pointer) int64 {
+	return int64(C.scm_to_int64(C.SCM(scm)))
+}
+
+func ScmToUint64(scm unsafe.Pointer) uint64 {
+	return uint64(C.scm_to_uint64(C.SCM(scm)))
+}
+
+func ScmFromInt64(x int64) unsafe.Pointer {
+	return unsafe.Pointer(C.scm_from_int64(C.scm_t_int64(x)))
+}
+
+func ScmFromUint64(x uint64) unsafe.Pointer {
+	return unsafe.Pointer(C.scm_from_uint64(C.scm_t_uint64(x)))
+}
+
+func ScmIsReal(scm unsafe.Pointer) bool {
+	return C.scm_real_p(C.SCM(scm)) == C.SCM_BOOL_T
+}
+
+func ScmToFloat64(scm unsafe.Pointer) float64 {
+	return float64(C.scm_to_double(C.SCM(scm)))
+}
+
+func ScmFromFloat64(x float64) unsafe.Pointer {
+	return unsafe.Pointer(C.scm_from_double(C.double(x)))
+}
+
 // ScmIsString checks if this scm is a string.
 func ScmIsString(scm unsafe.Pointer) bool {
 	return C.scm_string_p(C.SCM(scm)) == C.SCM_BOOL_T
