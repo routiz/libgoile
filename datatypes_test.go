@@ -71,4 +71,31 @@ func TestDatatype(t *testing.T) {
 		}
 
 	})
+	t.Run("list", func(t *testing.T) {
+		lst := libgoile.ScmList3(
+			libgoile.ScmFromString("first"),
+			libgoile.ScmFromString("second"),
+			libgoile.ScmFromString("third"),
+		)
+		len := libgoile.ScmLength(lst)
+		if len != 3 {
+			t.Log("expected:", 3, "real:", len)
+			t.Fail()
+		}
+		first := libgoile.ScmToString(libgoile.ScmListRef(lst, 0))
+		if first != "first" {
+			t.Log("expected:", "first", "real:", first)
+			t.Fail()
+		}
+		second := libgoile.ScmToString(libgoile.ScmListRef(lst, 1))
+		if second != "second" {
+			t.Log("expected:", "second", "real:", second)
+			t.Fail()
+		}
+		third := libgoile.ScmToString(libgoile.ScmListRef(lst, 2))
+		if third != "third" {
+			t.Log("expected:", "third", "real:", third)
+			t.Fail()
+		}
+	})
 }

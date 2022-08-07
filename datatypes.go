@@ -106,3 +106,12 @@ func ScmList5(elem1, elem2, elem3, elem4, elem5 unsafe.Pointer) unsafe.Pointer {
 		C.SCM(elem4),
 		C.SCM(elem5)))
 }
+
+func ScmLength(lst unsafe.Pointer) int {
+	scmlen := C.scm_length(C.SCM(lst))
+	return int(ScmToInt64(unsafe.Pointer(scmlen)))
+}
+
+func ScmListRef(lst unsafe.Pointer, k int) unsafe.Pointer {
+	return unsafe.Pointer(C.scm_list_ref(C.SCM(lst), C.SCM(ScmFromInt64(int64(k)))))
+}
