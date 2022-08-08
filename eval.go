@@ -7,6 +7,13 @@ import "unsafe"
 // #include<libguile.h>
 import "C"
 
+func ScmEval(exp, env unsafe.Pointer) unsafe.Pointer {
+	if env == nil {
+		env = unsafe.Pointer(C.scm_interaction_environment())
+	}
+	return unsafe.Pointer(C.scm_eval(C.SCM(exp), C.SCM(env)))
+}
+
 func ScmEvalString(sexpr string) unsafe.Pointer {
 	csexpr := C.CString(sexpr)
 	defer C.free(unsafe.Pointer(csexpr))
